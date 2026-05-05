@@ -1,0 +1,1063 @@
+{
+  "name": "OpenClue",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "OpenCluePulse",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6df20310-7997-4a89-b73e-e2a51610d757",
+      "name": "Agent Event Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3600,
+        -112
+      ],
+      "webhookId": "7a8a33ea-30dd-4342-8758-72d433b83b23"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "OpenClueActions",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "7c423098-03e0-49dd-a4a1-17d912f2e69c",
+      "name": "Frontend Action Inbound",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3600,
+        912
+      ],
+      "webhookId": "f9d2b2ae-ccfc-4d8b-96ce-71d0a2774904"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalize payload\nconst raw = $input.item.json;\nconst data = raw.body && typeof raw.body === 'object' && !Array.isArray(raw.body) ? raw.body : raw;\nconst project_id = data.project_id || (data.metadata ? data.metadata.project_id : (data.record ? data.record.project_id : null));\nreturn { json: { ...data, project_id } };"
+      },
+      "id": "84ad8dac-0dd8-4238-81ed-ec7a6a133c66",
+      "name": "Body Unwrap",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3824,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ ($json.action || $json.event_type || ($json.record ? 'task:test' : 'unclassified')).toString() }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "message:sent"
+            },
+            {
+              "value2": "message:received"
+            },
+            {
+              "operation": "startsWith",
+              "value2": "task:",
+              "output": 1
+            },
+            {
+              "value2": "task:test",
+              "output": 1
+            },
+            {
+              "value2": "broadcast",
+              "output": 2
+            },
+            {
+              "operation": "startsWith",
+              "value2": "session_",
+              "output": 3
+            },
+            {
+              "value2": "session_end",
+              "output": 3
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "f7db70f5-d134-4844-b3ae-9f34d0689af3",
+      "name": "Absolute Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4048,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "15de70d8-1d65-40e6-8240-a63ba6bf003b",
+      "name": "Task Field Extractor",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        4272,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.agentName }}",
+                    "rightValue": "promo",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Promo"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.agentName }}",
+                    "rightValue": "digit",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Digit"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.agentName }}",
+                    "rightValue": "string",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "String"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.agentName }}",
+                    "rightValue": "main",
+                    "operator": {
+                      "type": "array",
+                      "operation": "contains"
+                    }
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Main"
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "id": "d1ccc84f-c895-488a-99d1-9eff240dc013",
+      "name": "Task Agent Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        4496,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://tofyq3lga15o3184lxde506q:18789/hooks/n8n-promo",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 46cf3441242627eabf8eb5c32d2e0d7f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=this is a message generated from mission control system. you are assigned this task:\n\n\ntask title: {{ $json.taskTitle }}\n\ntask description: {{ $json.taskDescription }}\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f365cc9f-eac1-490c-ad1a-09f8e5bf05e1",
+      "name": "Sent to Promo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://tofyq3lga15o3184lxde506q:18789/hooks/n8n-digit",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 46cf3441242627eabf8eb5c32d2e0d7f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=this is a message generated from mission control system. you are assigned this task:\n\n\ntask title: {{ $json.taskTitle }}\n\ntask description: {{ $json.taskDescription }}\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "503b655d-921b-4691-994d-5a20dec5fbf4",
+      "name": "Sent to Digit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://tofyq3lga15o3184lxde506q:18789/hooks/n8n-string",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 46cf3441242627eabf8eb5c32d2e0d7f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=this is a message generated from mission control system. you are assigned this task:\n\n\ntask title: {{ $json.taskTitle }}\n\ntask description: {{ $json.taskDescription }}\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "78793869-47a8-4d5e-a7eb-6f4b6c519407",
+      "name": "Sent to String",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://tofyq3lga15o3184lxde506q:18789/hooks/n8n-main",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 46cf3441242627eabf8eb5c32d2e0d7f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "=this is a message generated from mission control system. you are assigned this task:\n\n\ntask title: {{ $json.taskTitle }}\n\ntask description: {{ $json.taskDescription }}\n\n\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ba733152-073a-429b-8d31-5ea07ab42ada",
+      "name": "Sent to Main",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Broadcast Resolver with Filtering and Metadata\nconst item = $input.item.json;\nconst selectedAgentIds = item.metadata?.agent_ids || [];\n\nconst allAgents = [\n  { name: 'promo', id: '1b92b1f5-570f-4c15-95cf-64eebcb03647', sessionKey: 'agent:promo:telegram:group:-1003728720677:topic:1239', to: '-1003728720677:topic:1239' },\n  { name: 'main', id: 'b760f890-e68b-48a7-9c93-a74a2ba7fa89', sessionKey: 'agent:main:telegram:group:-1003728720677:topic:1', to: '-1003728720677:topic:1' },\n  { name: 'digit', id: '161deb43-0dc0-4b2d-9c09-56387314ad59', sessionKey: 'agent:digit:telegram:group:-1003728720677:topic:3', to: '-1003728720677:topic:3' },\n  { name: 'string', id: '7d768392-879f-4bb4-ae40-c4ac96aea00a', sessionKey: 'agent:string:telegram:group:-1003728720677:topic:2', to: '-1003728720677:topic:2' }\n];\n\n// Filter if agent_ids are provided, otherwise broadcast to all\nconst targets = selectedAgentIds.length > 0 \n  ? allAgents.filter(a => selectedAgentIds.includes(a.id))\n  : allAgents;\n\nreturn targets.map(m => ({ \n  json: { \n    ...m, \n    message: item.message, \n    project_id: item.project_id,\n    session_key: m.sessionKey\n  } \n}));"
+      },
+      "id": "3c09d50b-83d9-4d4e-8e7e-09a5536a0d74",
+      "name": "Broadcast Resolver",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4496,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://tofyq3lga15o3184lxde506q:18789/hooks/n8n-{{ $json.name }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 46cf3441242627eabf8eb5c32d2e0d7f"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "sessionKey",
+              "value": "={{ $json.session_key }}"
+            },
+            {
+              "name": "session_key",
+              "value": "={{ $json.session_key }}"
+            },
+            {
+              "name": "project_id",
+              "value": "={{ $json.project_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f33ac82e-6486-4470-8a20-7983773b0e3d",
+      "name": "Broadcast Sender",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        1008
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://base.kutraa.com/rest/v1/activity_log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NjI0NDU2MCwiZXhwIjo0OTMxOTE4MTYwLCJyb2xlIjoiYW5vbiJ9.RJRl9UsbEImEOQYPBy6nZds-RYlaTclQQj2pJ8uJb6U"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NjI0NDU2MCwiZXhwIjo0OTMxOTE4MTYwLCJyb2xlIjoiYW5vbiJ9.RJRl9UsbEImEOQYPBy6nZds-RYlaTclQQj2pJ8uJb6U"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"event_type\": \"pulse\", \"description\": \"Orchestrator Activity\" }",
+        "options": {}
+      },
+      "id": "df0ad6d8-9ee5-4410-b941-1f8cba716e6f",
+      "name": "Activity Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        4944,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "47c58ce3-7f66-4865-9d03-6235fda6a6fa",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        5168,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f6aac25-b3a2-4918-91f8-1f0d4c432217",
+              "name": "messageEvent",
+              "value": "={{ $json.body.event }}",
+              "type": "string"
+            },
+            {
+              "id": "0b6ef421-324c-4f32-8027-ccf3200847be",
+              "name": "type",
+              "value": "={{ $json.body.type }}",
+              "type": "string"
+            },
+            {
+              "id": "d8a0c918-ca4a-4ec0-a375-8a7080f665dd",
+              "name": "sessionKey",
+              "value": "={{ $json.body.sessionKey || $json.body.session_key }}",
+              "type": "string"
+            },
+            {
+              "id": "01119d25-0684-403f-8b79-b30ec77151b3",
+              "name": "messageTimestamp",
+              "value": "={{ $json.body.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "09d18071-a74b-4fdd-91e3-11c6d1e20421",
+              "name": "sentTo",
+              "value": "={{ $json.body.context.to }}",
+              "type": "string"
+            },
+            {
+              "id": "68a1c9e0-9533-4788-bee1-40a89a1139b0",
+              "name": "message",
+              "value": "={{ [\n  {\n    \"role\": \"agent\",\n    \"content\": $json.body.context.content\n  }\n] }}",
+              "type": "array"
+            },
+            {
+              "id": "46578cfc-ddae-42b9-9ec6-cf662557189a",
+              "name": "channel",
+              "value": "={{ $json.body.context.channelId }}",
+              "type": "string"
+            },
+            {
+              "id": "c7504e1c-b718-4fd6-9908-5d75bd834e48",
+              "name": "agent",
+              "value": "={{ $json.body.context.accountId }}",
+              "type": "string"
+            },
+            {
+              "id": "516a0486-d0e6-4ea9-a7f4-e8d07b934e6b",
+              "name": "conversationId",
+              "value": "={{ $json.body.context.conversationId }}",
+              "type": "string"
+            },
+            {
+              "id": "68115351-cc85-4ca1-8cd0-2007a284a3e8",
+              "name": "messageId",
+              "value": "={{ $json.body.context.messageId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3824,
+        -160
+      ],
+      "id": "8a0ebf1e-2d98-4fcf-bf43-50a722297297",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_key",
+              "fieldValue": "={{ $('Edit Fields').item.json.sessionKey }}"
+            },
+            {
+              "fieldId": "agent_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.agent }}"
+            },
+            {
+              "fieldId": "client_name",
+              "fieldValue": "={{ $('Edit Fields').item.json.agent }}"
+            },
+            {
+              "fieldId": "messages",
+              "fieldValue": "={{ $('Edit Fields').item.json.message[0] }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $('Edit Fields').item.json.messageTimestamp }}"
+            },
+            {
+              "fieldId": "last_message_at",
+              "fieldValue": "={{ $('Edit Fields').item.json.messageTimestamp }}"
+            },
+            {
+              "fieldId": "client_id",
+              "fieldValue": "={{ $('Edit Fields').item.json.sentTo }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $('Edit Fields').item.json.channel }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4496,
+        -240
+      ],
+      "id": "99d7dec1-ac62-4d49-9282-7a2490f1537d",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "QPwqzAmuKww4FeZt",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://base.kutraa.com/rest/v1/rpc/append_conversation_message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NjI0NDU2MCwiZXhwIjo0OTMxOTE4MTYwLCJyb2xlIjoiYW5vbiJ9.RJRl9UsbEImEOQYPBy6nZds-RYlaTclQQj2pJ8uJb6U"
+            },
+            {
+              "name": "Content-Type",
+              "value": " application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_session_key",
+              "value": "={{ $json.sessionKey }}"
+            },
+            {
+              "name": "p_message",
+              "value": "={{ [\n  {\n    \"role\": $json.message?.[0]?.role,\n    \"content\": $json.message?.[0]?.content\n  }\n] }}"
+            },
+            {
+              "name": "p_agent_id",
+              "value": "={{ $json.agent }}"
+            },
+            {
+              "name": "p_client_name",
+              "value": "={{ $json.clientName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4720,
+        -48
+      ],
+      "id": "9dd65928-5fe3-4e92-aaf3-a235e40df38f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "da100adc-cdb0-4d5e-89bc-370df15c0aed",
+              "leftValue": "={{ $json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4272,
+        -160
+      ],
+      "id": "c652b592-e861-49b2-a6e0-68c5fab7f23b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "conversations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "session_key",
+              "keyValue": "={{ $json.sessionKey }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4048,
+        -160
+      ],
+      "id": "056f88f6-ae68-422b-8dbd-a46139d6dccf",
+      "name": "Get a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "QPwqzAmuKww4FeZt",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3f6aac25-b3a2-4918-91f8-1f0d4c432217",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "d8a0c918-ca4a-4ec0-a375-8a7080f665dd",
+              "name": "sessionKey",
+              "value": "={{ $json.session_key }}",
+              "type": "string"
+            },
+            {
+              "id": "01119d25-0684-403f-8b79-b30ec77151b3",
+              "name": "messageTimestamp",
+              "value": "={{ $json.created_at }}",
+              "type": "string"
+            },
+            {
+              "id": "09d18071-a74b-4fdd-91e3-11c6d1e20421",
+              "name": "sentTo",
+              "value": "={{ $json.client_id }}",
+              "type": "string"
+            },
+            {
+              "id": "68a1c9e0-9533-4788-bee1-40a89a1139b0",
+              "name": "message",
+              "value": "={{ $('Edit Fields').item.json.message }}",
+              "type": "array"
+            },
+            {
+              "id": "46578cfc-ddae-42b9-9ec6-cf662557189a",
+              "name": "channel",
+              "value": "={{ $json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "c7504e1c-b718-4fd6-9908-5d75bd834e48",
+              "name": "agent",
+              "value": "={{ $json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "1bc1068b-430a-4bf5-bb53-f3dbb3a66f83",
+              "name": "clientName",
+              "value": "={{$json.client_name}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4496,
+        -48
+      ],
+      "id": "f9a89cd2-c39b-4ab8-83a4-1ac3edae95bd",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://base.kutraa.com/rest/v1/rpc/append_conversation_message",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NjI0NDU2MCwiZXhwIjo0OTMxOTE4MTYwLCJyb2xlIjoiYW5vbiJ9.RJRl9UsbEImEOQYPBy6nZds-RYlaTclQQj2pJ8uJb6U"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc3NjI0NDU2MCwiZXhwIjo0OTMxOTE4MTYwLCJyb2xlIjoiYW5vbiJ9.RJRl9UsbEImEOQYPBy6nZds-RYlaTclQQj2pJ8uJb6U"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "p_session_key",
+              "value": "={{ $json.session_key }}"
+            },
+            {
+              "name": "p_message",
+              "value": "={{ [\n  {\n    \"role\": \"user\",\n    \"content\": $json.message\n  }\n] }}"
+            },
+            {
+              "name": "p_agent_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "p_client_name",
+              "value": "Mission Control"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e2c3a5d8-7b9e-4f6c-8a1d-3b5c7d9e2f4a",
+      "name": "Store User Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        4720,
+        1200
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Agent Event Inbound": {
+      "main": [
+        [
+          {
+            "node": "Body Unwrap",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frontend Action Inbound": {
+      "main": [
+        [
+          {
+            "node": "Body Unwrap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Body Unwrap": {
+      "main": [
+        [
+          {
+            "node": "Absolute Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Absolute Router": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Task Field Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Broadcast Resolver",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Field Extractor": {
+      "main": [
+        [
+          {
+            "node": "Task Agent Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Agent Switch": {
+      "main": [
+        [
+          {
+            "node": "Sent to Promo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sent to Digit",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sent to String",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sent to Main",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent to Promo": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent to Digit": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent to String": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent to Main": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Broadcast Resolver": {
+      "main": [
+        [
+          {
+            "node": "Broadcast Sender",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Store User Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Broadcast Sender": {
+      "main": [
+        [
+          {
+            "node": "Activity Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Activity Log": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "36f5c73c-7555-4201-ac7b-06316562d314",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df7c36f7b0ec34d9779c677c0f4ccaa3fac3e27b68d743ef9e0d7fba2cda7656"
+  },
+  "id": "cBZSwwkmoCkN2exD",
+  "tags": []
+}

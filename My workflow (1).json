@@ -1,0 +1,148 @@
+{
+  "name": "C-M Agent Bridge v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cm-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "491aed78-8f2c-4c48-a10c-847b241c3244",
+      "name": "C-M Agent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        7008,
+        240
+      ],
+      "webhookId": "7d06831c-3595-4dea-962b-03ddd3b18d47"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nlet rawMessage = String(body.message ?? body.text ?? body.query ?? '').trim();\nlet message = rawMessage;\nconst context = body.context ?? {};\n\nif (!message) {\n  return [{\n    json: {\n      ok: false,\n      error: 'Message is required.',\n      reply: 'Please type a question so I can help with the dashboard or agent workflow.',\n      suggestions: ['Show sales by product type', 'Summarize branch stock', 'Top products by stock']\n    }\n  }];\n}\n\nconst isShort = message.split(/\s+/).length <= 3 || /^(show|show me|yes|ok|sure|do it)$/i.test(message);\nlet intent = 'general';\nlet reply = 'I can help with sales, stock, dashboard context, or routing a task to the Openclaw agent workflow.';\nlet dashboard = 'Sales demo';\nlet actionHint = 'Ask for a chart, a summary, or a branch/product breakdown.';\nlet suggestions = [\n  'Show sales by product type',\n  'Show branch stock by city',\n  'Top 5 products by stock'\n];\n\nfunction applyIntentValues(key) {\n  switch(key) {\n    case 'sales_trend':\n      intent = 'sales_trend';\n      reply = 'Pull the Sales Trend chart and compare the current week with the previous week.';\n      dashboard = 'Sales Trend';\n      actionHint = 'Use the daily trend question in Metabase to show movement over time.';\n      suggestions = ['Daily sales trend', 'Weekly sales delta', 'Monthly comparison'];\n      break;\n    case 'product_mix':\n      intent = 'product_mix';\n      reply = 'I can summarize how sales are split across product types and highlight the leading category.';\n      dashboard = 'Product Mix';\n      actionHint = 'Use the product type question and a bar chart for quick comparison.';\n      suggestions = ['Top product types', 'Compare categories', 'Show product mix'];\n      break;\n    case 'branch_stock':\n      intent = 'branch_stock';\n      reply = 'I can show branch stock by city and surface the branches with the highest inventory.';\n      dashboard = 'Branch Stock';\n      actionHint = 'Use the branch city aggregation to compare inventory across locations.';\n      suggestions = ['Stock by city', 'Top branches by stock', 'Low stock branches'];\n      break;\n    case 'top_products':\n      intent = 'top_products';\n      reply = 'I can list the highest-stock products and keep the image thumbnails visible for the client.';\n      dashboard = 'Top Products';\n      actionHint = 'Use the top products table with total stock and image URL.';\n      suggestions = ['Top 5 products', 'Top 10 products', 'Show image table'];\n      break;\n    case 'dashboard_help':\n      intent = 'dashboard_help';\n      reply = 'The dashboard embed is ready. I can help route a request or explain which Metabase card to open.';\n      dashboard = 'Metabase Embed';\n      actionHint = 'Use the embedded dashboard and the sidebar for follow-up questions.';\n      suggestions = ['Open the dashboard', 'Explain the cards', 'How embedding works'];\n      break;\n    default:\n      intent = 'general';\n      reply = 'I can help with sales, stock, dashboard context, or routing a task to the Openclaw agent workflow.';\n      dashboard = 'Sales demo';\n      actionHint = 'Ask for a chart, a summary, or a branch/product breakdown.';\n      suggestions = ['Show sales by product type', 'Show branch stock by city', 'Top 5 products by stock'];\n  }\n}\n\nif (context.followUp && context.previousIntent && isShort) {\n  applyIntentValues(context.previousIntent);\n} else {\n  const normalized = message.toLowerCase();\n  if (/trend|daily|weekly|revenue|sales over time/.test(normalized)) {\n    applyIntentValues('sales_trend');\n  } else if (/product type|product mix|category/.test(normalized)) {\n    applyIntentValues('product_mix');\n  } else if (/top product|top 5|top 10|most stocked|most stock/.test(normalized)) {\n    applyIntentValues('top_products');\n  } else if (/branch|city|stock/.test(normalized)) {\n    applyIntentValues('branch_stock');\n  } else if (/embed|dashboard|metabase/.test(normalized)) {\n    applyIntentValues('dashboard_help');\n  }\n}\n\nreturn [{\n  json: {\n    ok: true,\n    intent,\n    message,\n    context,\n    dashboard,\n    reply,\n    suggestions,\n    actionHint,\n    project: 'C-M'\n  }\n}];"
+      },
+      "id": "05830aed-b2cd-46bc-9102-96ecc1f8ed8d",
+      "name": "Route C-M Agent Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7280,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1d310007-a085-4f9f-99b8-855924acc457",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        7536,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "resource": "row",
+        "table": "logs",
+        "columns": {
+          "mappings": [
+            {
+              "columnName": "project",
+              "value": "={{ $json.project }}"
+            },
+            {
+              "columnName": "intent",
+              "value": "={{ $json.intent }}"
+            },
+            {
+              "columnName": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "columnName": "dashboard",
+              "value": "={{ $json.dashboard }}"
+            },
+            {
+              "columnName": "context",
+              "value": "={{ $json.context }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        7280,
+        544
+      ],
+      "id": "eacbebb0-6acd-43c6-ac90-428258f3e5f0",
+      "name": "Create a row"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "C-M Agent Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route C-M Agent Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route C-M Agent Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Create a row": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "1863d799-bbe4-4db1-a353-ae01ff5a1845",
+  "meta": {
+    "instanceId": "b6d0a29de038bf7d8b4a58adb14ff6a1034c709d710c56c4be118377f6f2d4c1"
+  },
+  "id": "zavdODS8qXtoL8Ep",
+  "tags": [
+    {
+      "updatedAt": "2026-05-05T09:36:04.435Z",
+      "createdAt": "2026-05-05T09:36:04.435Z",
+      "id": "eOPepED6QhV03jmL",
+      "name": "C-M"
+    }
+  ]
+}

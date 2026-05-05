@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>C-M Analytics Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script defer src="https://cmmeta.kutraa.com/app/embed.js"></script>
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar card">
+        <div class="brand">
+          <span class="brand-mark">C-M</span>
+          <div>
+            <p class="eyebrow">Client portal</p>
+            <h2>Sales dashboard + agent workspace</h2>
+          </div>
+        </div>
+
+        <div class="topbar-meta">
+          <div>
+            <span>Status</span>
+            <strong id="connection-status">Loading dashboard…</strong>
+          </div>
+          <div>
+            <span>Source</span>
+            <strong>Supabase / Postgres</strong>
+          </div>
+          <div>
+            <span>Automation</span>
+            <strong>n8n / Openclaw</strong>
+          </div>
+        </div>
+      </header>
+
+      <section class="hero card">
+        <div>
+          <p class="eyebrow">C-M / Metabase Portal</p>
+          <h1>Operational views for the client, without the clutter.</h1>
+          <p class="lede">
+            A clean product surface for Metabase dashboards, live sales context, and a sidebar that can
+            hand off requests to n8n when you want the agent to take over.
+          </p>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <span>Data source</span>
+            <strong>Supabase / Postgres</strong>
+          </div>
+          <div>
+            <span>Analytics</span>
+            <strong>Metabase embed</strong>
+          </div>
+          <div>
+            <span>Automation</span>
+            <strong>n8n / Openclaw</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <div class="dashboard card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Dashboard</p>
+              <h2>Sales performance overview</h2>
+            </div>
+            <div class="pill dashboard-pill">Signed embed</div>
+          </div>
+
+          <div class="dashboard-frame">
+            <div id="metabase-dashboard-host"></div>
+            <div class="dashboard-fallback" id="dashboard-fallback">
+              Preparing the dashboard.
+            </div>
+          </div>
+        </div>
+
+        <aside class="sidebar card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Agent sidebar</p>
+              <h2>Ask about the data</h2>
+            </div>
+          </div>
+
+          <div class="quick-actions">
+            <button data-prompt="Summarize sales by product type.">Product mix</button>
+            <button data-prompt="Show branch cities with the most stock.">Branch stock</button>
+            <button data-prompt="Find the top 5 products by stock.">Top products</button>
+            <button data-prompt="What changed this week compared to last week?">Weekly change</button>
+          </div>
+
+          <div class="chat-log" id="chat-log">
+            <div class="message message-bot">
+              Ask a question or trigger an automation. If N8N_WEBHOOK_URL is set, messages will be forwarded.
+            </div>
+          </div>
+
+          <form id="agent-form" class="agent-form">
+            <textarea id="agent-input" rows="4" placeholder="Type a request for the agent..."></textarea>
+            <button type="submit">Send to agent</button>
+          </form>
+        </aside>
+      </section>
+    </main>
+  </body>
+  </html>
