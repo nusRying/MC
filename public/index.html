@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <link rel="stylesheet" href="/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@logto/browser@2.2.0/dist/index.min.js"></script>
     <script defer src="https://cmmeta.kutraa.com/app/embed.js"></script>
     <script defer src="/app.js"></script>
   </head>
@@ -21,18 +22,21 @@
         <h2>Mission Control</h2>
       </div>
 
-      <div class="topbar-meta">
-        <div>
-          <span>Status</span>
-          <strong id="connection-status"><span class="status-dot"></span> Online</strong>
+      <div id="auth-controls" style="display: flex; gap: 16px; align-items: center;">
+        <div class="topbar-meta" id="system-meta" style="display: none;">
+          <div>
+            <span>Status</span>
+            <strong id="connection-status"><span class="status-dot"></span> Online</strong>
+          </div>
+          <div>
+            <span>Environment</span>
+            <strong>Production</strong>
+          </div>
         </div>
-        <div>
-          <span>Environment</span>
-          <strong>Production</strong>
-        </div>
-        <div>
-          <span>Nodes</span>
-          <strong>OpenClue Cluster</strong>
+        <button id="sign-in" class="auth-btn" style="display: none;">Sign In</button>
+        <div id="user-info" style="display: none; align-items: center; gap: 12px;">
+          <span id="user-name" style="font-size: 13px; color: var(--text-muted);"></span>
+          <button id="sign-out" class="auth-btn-subtle">Sign Out</button>
         </div>
       </div>
     </header>

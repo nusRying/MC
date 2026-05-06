@@ -4,16 +4,28 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "mcp-server/index.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/.well-known/oauth-protected-resource",
+      "dest": "mcp-server/index.js"
+    },
+    {
+      "src": "/mcp/(.*)",
+      "dest": "mcp-server/index.js"
+    },
     {
       "src": "/api/(.*)",
       "dest": "server.js"
     },
     {
-      "src": "/debug",
-      "dest": "server.js"
+      "src": "/callback",
+      "dest": "/index.html"
     },
     {
       "src": "/(.*)",

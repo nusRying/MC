@@ -367,3 +367,38 @@ h1 {
   .workspace { grid-template-columns: 1fr; }
   .sidebar { position: static; }
 }
+
+/* Auth Buttons */
+.auth-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.auth-btn-subtle {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-btn-subtle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

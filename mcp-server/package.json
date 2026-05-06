@@ -1,0 +1,16 @@
+{
+  "name": "cm-portal-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.5.0",
+    "mcp-auth": "^0.2.0",
+    "express": "^5.0.1",
+    "zod": "^3.24.1",
+    "dotenv": "^16.4.7"
+  }
+}
