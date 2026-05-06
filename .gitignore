@@ -1,0 +1,6 @@
+node_modules/
+.env
+.env.example
+*.log
+.DS_Store
+public/hero-bg.png

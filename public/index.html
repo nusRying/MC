@@ -3,111 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>C-M Analytics Portal</title>
+    <title>Analytics Portal | Enterprise Intelligence</title>
+    
+    <!-- Professional Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
     <link rel="stylesheet" href="/styles.css" />
     <script defer src="https://cmmeta.kutraa.com/app/embed.js"></script>
     <script defer src="/app.js"></script>
   </head>
   <body>
-    <main class="shell">
-      <header class="topbar card">
-        <div class="brand">
-          <span class="brand-mark">C-M</span>
-          <div>
-            <p class="eyebrow">Client portal</p>
-            <h2>Sales dashboard + agent workspace</h2>
-          </div>
-        </div>
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">CM</div>
+        <h2>Mission Control</h2>
+      </div>
 
-        <div class="topbar-meta">
-          <div>
-            <span>Status</span>
-            <strong id="connection-status">Loading dashboard…</strong>
-          </div>
-          <div>
-            <span>Source</span>
-            <strong>Supabase / Postgres</strong>
-          </div>
-          <div>
-            <span>Automation</span>
-            <strong>n8n / Openclaw</strong>
-          </div>
-        </div>
-      </header>
-
-      <section class="hero card">
+      <div class="topbar-meta">
         <div>
-          <p class="eyebrow">C-M / Metabase Portal</p>
-          <h1>Operational views for the client, without the clutter.</h1>
-          <p class="lede">
-            A clean product surface for Metabase dashboards, live sales context, and a sidebar that can
-            hand off requests to n8n when you want the agent to take over.
-          </p>
+          <span>Status</span>
+          <strong id="connection-status"><span class="status-dot"></span> Online</strong>
         </div>
-        <div class="hero-stats">
-          <div>
-            <span>Data source</span>
-            <strong>Supabase / Postgres</strong>
-          </div>
-          <div>
-            <span>Analytics</span>
-            <strong>Metabase embed</strong>
-          </div>
-          <div>
-            <span>Automation</span>
-            <strong>n8n / Openclaw</strong>
-          </div>
+        <div>
+          <span>Environment</span>
+          <strong>Production</strong>
         </div>
+        <div>
+          <span>Nodes</span>
+          <strong>OpenClue Cluster</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell">
+      <section class="page-header">
+        <p class="eyebrow">Operational Intelligence</p>
+        <h1>Performance Dashboard</h1>
+        <p class="lede">
+          A centralized analytics workspace for real-time sales monitoring and agent-assisted data synthesis. 
+          Powered by Metabase and OpenClue.
+        </p>
       </section>
 
       <section class="workspace">
         <div class="dashboard card">
           <div class="section-head">
-            <div>
-              <p class="eyebrow">Dashboard</p>
-              <h2>Sales performance overview</h2>
-            </div>
-            <div class="pill dashboard-pill">Signed embed</div>
+            <h2>Metabase Analytics View</h2>
+            <div id="dashboard-info" style="font-size: 11px; color: var(--text-subtle);">ID: 04</div>
           </div>
 
           <div class="dashboard-frame">
             <div id="metabase-dashboard-host"></div>
             <div class="dashboard-fallback" id="dashboard-fallback">
-              Preparing the dashboard.
+              Synchronizing data sources...
             </div>
           </div>
         </div>
 
         <aside class="sidebar card">
           <div class="section-head">
-            <div>
-              <p class="eyebrow">Agent sidebar</p>
-              <h2>Ask about the data</h2>
-            </div>
+            <h2>Intelligence Agent</h2>
           </div>
 
           <div class="quick-actions">
-            <button data-prompt="Summarize sales by product type.">Product mix</button>
-            <button data-prompt="Show branch cities with the most stock.">Branch stock</button>
-            <button data-prompt="Find the top 5 products by stock.">Top products</button>
-            <button data-prompt="What changed this week compared to last week?">Weekly change</button>
+            <button data-prompt="Summarize sales by product type.">
+              <strong>Product Distribution</strong>
+              <small>Category mix analysis</small>
+            </button>
+            <button data-prompt="Show branch cities with the most stock.">
+              <strong>Inventory Status</strong>
+              <small>Location-based stock levels</small>
+            </button>
+            <button data-prompt="Find the top 5 products by stock.">
+              <strong>Asset Leaders</strong>
+              <small>High-inventory itemized list</small>
+            </button>
+            <button data-prompt="What changed this week compared to last week?">
+              <strong>Temporal Variance</strong>
+              <small>Weekly trend delta</small>
+            </button>
           </div>
 
           <div class="chat-log" id="chat-log">
             <div class="message message-bot">
-              Ask a question or trigger an automation. If N8N_WEBHOOK_URL is set, messages will be forwarded.
+              <span class="message-text">Interface initialized. Enter a query or select a shortcut to begin analysis.</span>
+            </div>
+          </div>
+
+          <div id="typing-container" style="display: none; padding: 0 24px;">
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
             </div>
           </div>
 
           <form id="agent-form" class="agent-form">
-            <textarea id="agent-input" rows="4" placeholder="Type a request for the agent..."></textarea>
-            <button type="submit">Send to agent</button>
+            <textarea id="agent-input" placeholder="Query agent..."></textarea>
+            <button type="submit">Send</button>
           </form>
         </aside>
       </section>
     </main>
   </body>
-  </html>
+</html>

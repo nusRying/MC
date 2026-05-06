@@ -106,47 +106,49 @@ app.get('/debug', (_req, res) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>C-M Portal Debug</title>
+  <title>System Debug | C-M Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 2rem; background: #f5f5f5; }
-    .container { max-width: 900px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    h1 { color: #333; }
-    .section { margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1rem; }
-    .label { font-weight: 600; color: #666; }
-    .value { font-family: 'Monaco', 'Courier New', monospace; background: #f9f9f9; padding: 0.5rem; border-radius: 4px; word-break: break-all; }
-    .status-ok { color: #27ae60; }
-    .status-missing { color: #e74c3c; }
-    .status-pending { color: #f39c12; }
-    pre { background: #f9f9f9; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    :root { --bg: #0a0a0a; --panel: #141414; --border: #262626; --text: #fafafa; --muted: #a3a3a3; --accent: #6366f1; }
+    body { font-family: 'Inter', sans-serif; margin: 0; background: var(--bg); color: var(--text); padding: 40px 20px; }
+    .container { max-width: 800px; margin: 0 auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+    h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 24px; letter-spacing: -0.02em; }
+    .section { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 8px; display: block; }
+    .value { font-family: ui-monospace, monospace; background: #000; padding: 12px; border-radius: 6px; border: 1px solid var(--border); word-break: break-all; font-size: 13px; }
+    .status-ok { color: #22c55e; }
+    .status-missing { color: #ef4444; }
+    pre { background: #000; padding: 16px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>C-M Portal Debug Info</h1>
+    <h1>System Diagnosis</h1>
     
     <div class="section">
-      <p class="label">N8N Webhook URL:</p>
-      <p class="value" id="webhook-url">Loading...</p>
+      <span class="label">N8N Webhook Endpoint</span>
+      <div class="value" id="webhook-url">Checking...</div>
     </div>
     
     <div class="section">
-      <p class="label">Metabase Secret Key:</p>
-      <p class="value" id="secret-key">Loading...</p>
+      <span class="label">Metabase Signing Configuration</span>
+      <div class="value" id="secret-key">Checking...</div>
     </div>
     
     <div class="section">
-      <p class="label">Last Agent Response:</p>
-      <pre id="last-response">Loading...</pre>
+      <span class="label">Last Agent Transaction</span>
+      <pre id="last-response">Fetching activity...</pre>
     </div>
     
     <div class="section">
-      <p class="label">Last Agent Error:</p>
+      <span class="label">Active Faults</span>
       <pre id="last-error">None</pre>
     </div>
     
-    <div class="section">
-      <p class="label">Server Time:</p>
-      <p class="value" id="server-time">Loading...</p>
+    <div class="section" style="text-align: right; border-top: none;">
+      <span class="label" id="server-time">...</span>
     </div>
   </div>
   
@@ -156,24 +158,24 @@ app.get('/debug', (_req, res) => {
         const res = await fetch('/api/debug');
         const data = await res.json();
         
-        document.getElementById('webhook-url').textContent = data.n8nWebhookUrl;
-        document.getElementById('webhook-url').className = 'value ' + (data.n8nWebhookUrl === '(not configured)' ? 'status-missing' : 'status-ok');
+        const urlEl = document.getElementById('webhook-url');
+        urlEl.textContent = data.n8nWebhookUrl;
+        urlEl.className = 'value ' + (data.n8nWebhookUrl === '(not configured)' ? 'status-missing' : 'status-ok');
         
-        document.getElementById('secret-key').textContent = data.hasMetabaseSecretKey ? '✓ Configured' : '✗ Missing';
-        document.getElementById('secret-key').className = 'value ' + (data.hasMetabaseSecretKey ? 'status-ok' : 'status-missing');
+        const keyEl = document.getElementById('secret-key');
+        keyEl.textContent = data.hasMetabaseSecretKey ? 'ACTIVE' : 'MISSING';
+        keyEl.className = 'value ' + (data.hasMetabaseSecretKey ? 'status-ok' : 'status-missing');
         
-        document.getElementById('last-response').textContent = data.lastAgentResponse ? JSON.stringify(data.lastAgentResponse, null, 2) : 'No responses yet';
-        
-        document.getElementById('last-error').textContent = data.lastAgentError ? JSON.stringify(data.lastAgentError, null, 2) : 'None';
-        
-        document.getElementById('server-time').textContent = data.serverTime;
+        document.getElementById('last-response').textContent = data.lastAgentResponse ? JSON.stringify(data.lastAgentResponse, null, 2) : 'No recent transactions';
+        document.getElementById('last-error').textContent = data.lastAgentError ? JSON.stringify(data.lastAgentError, null, 2) : 'No faults detected';
+        document.getElementById('server-time').textContent = 'System Time: ' + data.serverTime;
       } catch (error) {
-        document.getElementById('webhook-url').textContent = 'Error loading debug info: ' + error.message;
+        document.getElementById('webhook-url').textContent = 'Error syncing with diagnostic API: ' + error.message;
       }
     }
     
     loadDebugInfo();
-    setInterval(loadDebugInfo, 3000);
+    setInterval(loadDebugInfo, 5000);
   </script>
 </body>
 </html>
@@ -185,6 +187,11 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, () => {
-  console.log(`C-M portal running on http://localhost:${port}`);
-});
+// For Vercel: Export the app instead of calling listen directly
+if (process.env.NODE_ENV !== 'production' && require.main === module) {
+  app.listen(port, () => {
+    console.log(`C-M portal running on http://localhost:${port}`);
+  });
+}
+
+module.exports = app;
