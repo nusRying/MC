@@ -1,4 +1,7 @@
-import LogtoClient from 'https://cdn.jsdelivr.net/npm/@logto/browser/+esm';
+import LogtoClient from 'https://esm.sh/@logto/browser@2.2.0';
+
+console.log('🚀 Portal Initializing...');
+console.log('📦 LogtoClient Type:', typeof LogtoClient);
 
 // --- Logto Authentication ---
 const logtoConfig = {
@@ -19,23 +22,32 @@ async function initAuth() {
 
   try {
     // 1. Load dynamic config from server
+    console.log('📡 Loading config...');
     const config = await loadConfig().catch(() => ({}));
     window.portalConfig = config || {};
+    console.log('✅ Config loaded:', config);
 
-    // 2. Initialize Logto (Using the imported LogtoClient)
+    // 2. Initialize Logto
+    if (typeof LogtoClient !== 'function') {
+      throw new Error('LogtoClient is not a constructor. Check import.');
+    }
+
     logto = new LogtoClient({
       endpoint: config.LOGTO_ENDPOINT || logtoConfig.endpoint,
       appId: config.LOGTO_APP_ID || logtoConfig.appId,
       resources: logtoConfig.resources,
     });
+    window.logtoInstance = logto; // Debugging
 
     // 3. Handle Callback
     if (window.location.pathname === '/callback') {
+      console.log('🔄 Handling callback...');
       await logto.handleSignInCallback(window.location.href);
       window.history.replaceState({}, document.title, '/');
     }
 
     const authenticated = await logto.isAuthenticated();
+    console.log('🔐 Authenticated:', authenticated);
 
     if (authenticated) {
       if (signInBtn) signInBtn.style.display = 'none';
@@ -68,7 +80,7 @@ async function initAuth() {
       showAuthOverlay();
     }
   } catch (error) {
-    console.error('Auth Error:', error);
+    console.error('❌ Auth Error:', error);
     showAuthOverlay();
   }
 }
@@ -88,7 +100,10 @@ function showAuthOverlay() {
   overlay.style = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; background: rgba(10,10,10,0.85); backdrop-filter: blur(12px);';
   document.body.appendChild(overlay);
 
-  document.getElementById('overlay-sign-in').onclick = () => logto.signIn(`${window.location.origin}/callback`);
+  document.getElementById('overlay-sign-in').onclick = () => {
+    console.log('🖱️ Sign-in clicked, initiating Logto flow...');
+    logto.signIn(`${window.location.origin}/callback`);
+  };
 }
 
 // --- Utility Functions ---
@@ -165,9 +180,7 @@ async function initDashboard() {
   const host = document.getElementById('metabase-dashboard-host');
 
   try {
-    const config = window.portalConfig;
     const { token } = await loadToken();
-
     const dashboard = document.createElement('metabase-dashboard');
     dashboard.setAttribute('with-title', 'true');
     dashboard.setAttribute('with-downloads', 'true');
@@ -175,7 +188,7 @@ async function initDashboard() {
     
     host.replaceChildren(dashboard);
     if (fallback) fallback.style.display = 'none';
-    if (status) status.innerHTML = `<span class="status-dot"></span> Online (ID: ${config.dashboardId})`;
+    if (status) status.innerHTML = `<span class="status-dot"></span> Online`;
   } catch (error) {
     if (status) status.innerHTML = `<span class="status-dot" style="background: #ef4444;"></span> Metabase Error`;
   }
