@@ -1,3 +1,5 @@
+import LogtoClient from 'https://cdn.jsdelivr.net/npm/@logto/browser/+esm';
+
 // --- Logto Authentication ---
 const logtoConfig = {
   endpoint: 'https://p7a5w0.logto.app', 
@@ -20,11 +22,8 @@ async function initAuth() {
     const config = await loadConfig().catch(() => ({}));
     window.portalConfig = config || {};
 
-    // 2. Initialize Logto (Handling global name from CDN)
-    const Client = window.LogtoClient || (window.Logto && window.Logto.LogtoClient);
-    if (!Client) throw new Error('Logto SDK failed to load from CDN.');
-
-    logto = new Client({
+    // 2. Initialize Logto (Using the imported LogtoClient)
+    logto = new LogtoClient({
       endpoint: config.LOGTO_ENDPOINT || logtoConfig.endpoint,
       appId: config.LOGTO_APP_ID || logtoConfig.appId,
       resources: logtoConfig.resources,
@@ -50,11 +49,9 @@ async function initAuth() {
       const claims = await logto.getIdTokenClaims();
       if (userName) userName.textContent = claims.name || claims.username || 'User';
 
-      // Remove overlay if present
       const overlay = document.getElementById('auth-overlay');
       if (overlay) overlay.remove();
 
-      // Start Dashboard
       if (!dashboardInitialized) {
         dashboardInitialized = true;
         await initDashboard();
@@ -72,7 +69,7 @@ async function initAuth() {
     }
   } catch (error) {
     console.error('Auth Error:', error);
-    showAuthOverlay(); // Fallback to show login screen even on config error
+    showAuthOverlay();
   }
 }
 
@@ -100,9 +97,7 @@ function parseMarkdown(text) {
   if (!text) return '';
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/__(.*?)__/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/_(.*?)_/g, '<em>$1</em>')
     .replace(/`(.*?)`/g, '<code>$1</code>')
     .replace(/\n/g, '<br>');
 }
@@ -141,15 +136,6 @@ function addMessage(log, text, role = 'bot', opts = {}) {
   meta.textContent = `${role.toUpperCase()} • ${getTimestamp()}`;
   node.appendChild(meta);
 
-  if (role === 'bot' && opts.followUp && opts.dashboard) {
-    const analysis = document.createElement('div');
-    analysis.style.fontSize = '11px';
-    analysis.style.color = 'var(--text-subtle)';
-    analysis.style.marginBottom = '4px';
-    analysis.textContent = `Analyzing source: ${opts.dashboard}`;
-    node.appendChild(analysis);
-  }
-
   const contentNode = document.createElement('div');
   contentNode.className = 'message-text';
   contentNode.innerHTML = role === 'bot' ? parseMarkdown(text) : text;
@@ -169,10 +155,6 @@ function addMessage(log, text, role = 'bot', opts = {}) {
 function setTyping(visible) {
   const container = document.getElementById('typing-container');
   if (container) container.style.display = visible ? 'block' : 'none';
-  if (visible) {
-    const log = document.getElementById('chat-log');
-    if (log) log.scrollTop = log.scrollHeight;
-  }
 }
 
 // --- Initialization ---
@@ -184,16 +166,9 @@ async function initDashboard() {
 
   try {
     const config = window.portalConfig;
-    window.metabaseConfig = {
-      theme: { preset: config.theme || 'light' },
-      isGuest: config.isGuest,
-      instanceUrl: config.metabaseInstanceUrl,
-    };
-
     const { token } = await loadToken();
 
     const dashboard = document.createElement('metabase-dashboard');
-    dashboard.id = 'metabase-dashboard';
     dashboard.setAttribute('with-title', 'true');
     dashboard.setAttribute('with-downloads', 'true');
     dashboard.setAttribute('token', token);
@@ -203,10 +178,6 @@ async function initDashboard() {
     if (status) status.innerHTML = `<span class="status-dot"></span> Online (ID: ${config.dashboardId})`;
   } catch (error) {
     if (status) status.innerHTML = `<span class="status-dot" style="background: #ef4444;"></span> Metabase Error`;
-    if (fallback) {
-      fallback.textContent = `ERROR: ${error.message}`;
-      fallback.style.color = '#ef4444';
-    }
   }
 }
 
@@ -241,36 +212,15 @@ async function initAgentSidebar() {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${accessToken}`
           },
-          body: JSON.stringify({
-            message,
-            context: {
-              source: 'enterprise-portal-v3',
-              previousIntent: window.lastIntent || null,
-            },
-          }),
+          body: JSON.stringify({ message, context: { source: 'enterprise-portal-v3' } }),
         });
 
         const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || 'Agent request failed.');
-
-        if (payload.intent) window.lastIntent = payload.intent;
         setTyping(false);
-        addMessage(log, payload.reply || 'Request processed.', 'bot', { 
-          intent: payload.intent, 
-          dashboard: payload.dashboard
-        });
+        addMessage(log, payload.reply || 'Request processed.', 'bot', { dashboard: payload.dashboard });
       } catch (error) {
         setTyping(false);
         addMessage(log, `**ERROR:** ${error.message}`, 'bot');
-      }
-    });
-  }
-
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        form.dispatchEvent(new Event('submit'));
       }
     });
   }
@@ -280,8 +230,12 @@ async function initAgentSidebar() {
 const signInAction = () => logto.signIn(`${window.location.origin}/callback`);
 const signOutAction = () => logto.signOut(`${window.location.origin}`);
 
-document.getElementById('sign-in').onclick = signInAction;
-document.getElementById('sign-out').onclick = signOutAction;
+if (document.getElementById('sign-in')) document.getElementById('sign-in').onclick = signInAction;
+if (document.getElementById('sign-out')) document.getElementById('sign-out').onclick = signOutAction;
 
 // Entry Point
-document.addEventListener('DOMContentLoaded', initAuth);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAuth);
+} else {
+  initAuth();
+}
