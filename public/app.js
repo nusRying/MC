@@ -1,9 +1,7 @@
 import LogtoClient from 'https://esm.sh/@logto/browser@2.2.0';
 
 console.log('🚀 Portal Initializing...');
-console.log('📦 LogtoClient Type:', typeof LogtoClient);
 
-// --- Logto Authentication ---
 const logtoConfig = {
   endpoint: 'https://p7a5w0.logto.app', 
   appId: 'rob9ql3srvz75f409v4mj',
@@ -21,31 +19,26 @@ async function initAuth() {
   const workspace = document.querySelector('.workspace');
 
   try {
-    // 1. Load dynamic config from server
-    console.log('📡 Loading config...');
     const config = await loadConfig().catch(() => ({}));
     window.portalConfig = config || {};
-    console.log('✅ Config loaded:', config);
-
-    // 2. Initialize Logto
-    if (typeof LogtoClient !== 'function') {
-      throw new Error('LogtoClient is not a constructor. Check import.');
-    }
 
     logto = new LogtoClient({
       endpoint: config.LOGTO_ENDPOINT || logtoConfig.endpoint,
       appId: config.LOGTO_APP_ID || logtoConfig.appId,
       resources: logtoConfig.resources,
     });
-    window.logtoInstance = logto; // Debugging
+    window.logtoInstance = logto;
 
-    // 3. Handle Callback
+    // 1. Check if we are in the middle of a callback
     if (window.location.pathname === '/callback') {
-      console.log('🔄 Handling callback...');
+      console.log('🔄 Callback detected. Processing authentication...');
       await logto.handleSignInCallback(window.location.href);
-      window.history.replaceState({}, document.title, '/');
+      console.log('✅ Callback handled. Redirecting to home...');
+      window.location.assign('/'); // Force a hard reload to home to clear state
+      return; 
     }
 
+    // 2. Normal Auth Check
     const authenticated = await logto.isAuthenticated();
     console.log('🔐 Authenticated:', authenticated);
 
@@ -70,18 +63,15 @@ async function initAuth() {
         initAgentSidebar();
       }
     } else {
-      if (signInBtn) signInBtn.style.display = 'block';
-      if (userInfo) userInfo.style.display = 'none';
-      if (systemMeta) systemMeta.style.display = 'none';
-      if (workspace) {
-        workspace.style.opacity = '0.05';
-        workspace.style.pointerEvents = 'none';
-      }
+      console.log('🚫 Not authenticated. Showing Mission Control...');
       showAuthOverlay();
     }
   } catch (error) {
     console.error('❌ Auth Error:', error);
-    showAuthOverlay();
+    // Don't show overlay if we are still on the callback page to avoid flickering
+    if (window.location.pathname !== '/callback') {
+      showAuthOverlay();
+    }
   }
 }
 
@@ -101,7 +91,6 @@ function showAuthOverlay() {
   document.body.appendChild(overlay);
 
   document.getElementById('overlay-sign-in').onclick = () => {
-    console.log('🖱️ Sign-in clicked, initiating Logto flow...');
     logto.signIn(`${window.location.origin}/callback`);
   };
 }
