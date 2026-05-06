@@ -63,7 +63,8 @@ app.post('/api/agent', async (req, res) => {
       const contentType = response.headers.get('content-type') || '';
       if (contentType.includes('application/json')) {
         const data = await response.json();
-        const reply = data.reply || data.message || data.text || 'Agent workflow completed.';
+        // Prioritize 'output' as requested, then other common n8n response fields
+        const reply = data.output || data.reply || data.message || data.text || 'Agent workflow completed.';
         lastAgentResponse = { timestamp: new Date().toISOString(), message, reply, data };
         lastAgentError = null;
         return res.json({ reply, raw: data });
