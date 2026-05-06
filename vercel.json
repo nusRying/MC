@@ -1,43 +1,25 @@
 {
   "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node"
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
     },
     {
-      "src": "mcp-server/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/.well-known/oauth-protected-resource",
-      "dest": "mcp-server/index.js"
+      "source": "/mcp/(.*)",
+      "destination": "/api/mcp.js"
     },
     {
-      "src": "/mcp/(.*)",
-      "dest": "mcp-server/index.js"
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "/api/mcp.js"
     },
     {
-      "src": "/sse",
-      "dest": "mcp-server/index.js"
+      "source": "/callback",
+      "destination": "/index.html"
     },
     {
-      "src": "/messages",
-      "dest": "mcp-server/index.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/callback",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "server.js"
+      "source": "/(.*)",
+      "destination": "/api/index.js"
     }
   ]
 }
