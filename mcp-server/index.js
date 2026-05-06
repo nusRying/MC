@@ -4,12 +4,9 @@ import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { MCPAuth } from 'mcp-auth';
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-dotenv.config({ path: '../.env' }); // Load from the root .env
+dotenv.config();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const port = process.env.MCP_PORT || 3001;
 
@@ -40,7 +37,6 @@ const server = new McpServer({
 
 // --- 3. Register Tools ---
 
-// Tool: Query Analytics Status
 server.tool(
   'get_analytics_status',
   { description: 'Get the current status of the Metabase dashboard and system nodes.' },
@@ -54,7 +50,6 @@ server.tool(
   }
 );
 
-// Tool: Ask the AI Agent (via n8n)
 server.tool(
   'ask_intelligence_agent',
   { 
@@ -95,19 +90,16 @@ app.post('/messages', async (req, res) => {
   await transport.handlePostMessage(req, res);
 });
 
-// Middleware for bearer auth validation on execution
 app.use('/mcp', mcpAuth.bearerAuth('jwt', {
   resource: resourceIdentifier,
   audience: resourceIdentifier,
   requiredScopes: ['read:analytics'],
 }));
 
-// Export for Vercel
 export default app;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, () => {
     console.log(`🤖 C-M Analytics MCP Server running on http://localhost:${port}`);
-    console.log(`🔒 Secure Discovery: http://localhost:${port}/.well-known/oauth-protected-resource`);
   });
 }

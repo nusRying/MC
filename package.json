@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Frontend portal for Metabase dashboard embedding with agent sidebar and token-proxy backend.",
-  "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js",
     "dev": "NODE_ENV=development node server.js"

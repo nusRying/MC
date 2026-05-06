@@ -20,6 +20,14 @@
       "dest": "mcp-server/index.js"
     },
     {
+      "src": "/sse",
+      "dest": "mcp-server/index.js"
+    },
+    {
+      "src": "/messages",
+      "dest": "mcp-server/index.js"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "server.js"
     },
