@@ -89,15 +89,24 @@ app.post('/api/agent', verifyLogtoToken, async (req, res) => {
       return res.status(response.status).json({ error: `n8n error: ${response.status}` });
     }
 
-    const data = await response.json();
-    console.log('✅ n8n Response Received:', JSON.stringify(data).substring(0, 100));
-    
-    const result = Array.isArray(data) ? data[0] : data;
+    const contentType = response.headers.get('content-type') || '';
+    let data;
+    let replyText = "Processed.";
+
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+      console.log('✅ n8n JSON Response:', JSON.stringify(data).substring(0, 100));
+      const result = Array.isArray(data) ? data[0] : data;
+      replyText = result.output || result.reply || result.text || result.message || JSON.stringify(result);
+    } else {
+      replyText = await response.text();
+      console.log('✅ n8n Text Response:', replyText.substring(0, 100));
+    }
     
     res.json({ 
-      reply: result.output || result.reply || result.text || "Processed.",
-      dashboard: result.dashboard || null,
-      intent: result.intent || null
+      reply: replyText,
+      dashboard: (data && !Array.isArray(data)) ? data.dashboard : (Array.isArray(data) ? data[0]?.dashboard : null),
+      intent: (data && !Array.isArray(data)) ? data.intent : (Array.isArray(data) ? data[0]?.intent : null)
     });
   } catch (error) {
     console.error('💥 Agent Proxy Crash:', error.message);
