@@ -83,10 +83,14 @@ app.post('/api/agent', verifyLogtoToken, async (req, res) => {
     });
 
     const data = await response.json();
+    
+    // n8n often returns an array [ { output: "..." } ]
+    const result = Array.isArray(data) ? data[0] : data;
+    
     res.json({ 
-      reply: data.output || data.reply || "Processed.",
-      dashboard: data.dashboard || null,
-      intent: data.intent || null
+      reply: result.output || result.reply || result.text || "Processed.",
+      dashboard: result.dashboard || null,
+      intent: result.intent || null
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to communicate with intelligence agent.' });
