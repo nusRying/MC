@@ -73,6 +73,7 @@ app.post('/api/agent', verifyLogtoToken, async (req, res) => {
   if (!n8nUrl) return res.status(500).json({ error: 'n8n Webhook URL is not configured.' });
 
   try {
+    console.log('📡 Forwarding to n8n:', n8nUrl);
     const response = await fetch(n8nUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -82,9 +83,15 @@ app.post('/api/agent', verifyLogtoToken, async (req, res) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ n8n Error Response:', response.status, errorText);
+      return res.status(response.status).json({ error: `n8n error: ${response.status}` });
+    }
+
     const data = await response.json();
+    console.log('✅ n8n Response Received:', JSON.stringify(data).substring(0, 100));
     
-    // n8n often returns an array [ { output: "..." } ]
     const result = Array.isArray(data) ? data[0] : data;
     
     res.json({ 
@@ -93,7 +100,8 @@ app.post('/api/agent', verifyLogtoToken, async (req, res) => {
       intent: result.intent || null
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to communicate with intelligence agent.' });
+    console.error('💥 Agent Proxy Crash:', error.message);
+    res.status(500).json({ error: `Failed to communicate with intelligence agent: ${error.message}` });
   }
 });
 
