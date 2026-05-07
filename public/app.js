@@ -163,22 +163,28 @@ function setTyping(visible) {
 
 // --- Initialization ---
 
+const METABASE_PUBLIC_URL = 'http://cmmeta.kutraa.com/public/dashboard/ef7da827-044a-4cea-9c7c-215520daaa02';
+
 async function initDashboard() {
   const fallback = document.getElementById('dashboard-fallback');
   const status = document.getElementById('connection-status');
   const host = document.getElementById('metabase-dashboard-host');
 
   try {
-    const { token } = await loadToken();
-    const dashboard = document.createElement('metabase-dashboard');
-    dashboard.setAttribute('with-title', 'true');
-    dashboard.setAttribute('with-downloads', 'true');
-    dashboard.setAttribute('token', token);
+    console.log('🏗️ Rendering public dashboard via iframe...');
     
-    host.replaceChildren(dashboard);
+    host.innerHTML = `
+      <iframe
+        src="${METABASE_PUBLIC_URL}#bordered=false&titled=true"
+        style="width: 100%; height: 100%; min-height: 800px; border: none; border-radius: 8px;"
+        allowfullscreen
+      ></iframe>
+    `;
+
     if (fallback) fallback.style.display = 'none';
     if (status) status.innerHTML = `<span class="status-dot"></span> Online`;
   } catch (error) {
+    console.error('❌ Dashboard Error:', error);
     if (status) status.innerHTML = `<span class="status-dot" style="background: #ef4444;"></span> Metabase Error`;
   }
 }
