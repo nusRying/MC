@@ -163,7 +163,7 @@ function setTyping(visible) {
 
 // --- Initialization ---
 
-const METABASE_PUBLIC_URL = 'https://cmmeta.kutraa.com/public/dashboard/ef7da827-044a-4cea-9c7c-215520daaa02';
+const METABASE_PUBLIC_URL = 'https://cmmeta.kutraa.com/public/dashboard/988c6918-cadc-4dc0-9eb7-7d09519c454b';
 
 async function initDashboard() {
   const fallback = document.getElementById('dashboard-fallback');
