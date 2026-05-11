@@ -1,0 +1,206 @@
+{
+  "name": "C-M Agent Bridge v2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "cm-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "db92e039-0fe7-4049-9f58-a19e1f825697",
+      "name": "C-M Agent Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        7456,
+        464
+      ],
+      "webhookId": "7d06831c-3595-4dea-962b-03ddd3b18d47"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {
+          "webSearch": {
+            "searchContextSize": "medium"
+          }
+        },
+        "options": {
+          "maxRetries": 2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        7696,
+        688
+      ],
+      "id": "53531b10-776b-463c-a5a7-6a54078f648b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OGlGtjr9o0yW3otq",
+          "name": "C-M"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.output }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        8032,
+        464
+      ],
+      "id": "6f401211-8d56-4c45-9096-806baf1378ff",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "=You are a senior data analyst for a jewelry and perfume brand in Saudi Arabia. \nYou have access to Metabase via MCP tools. Answer every question by querying \nreal data first, then delivering a one-paragraph insight. Never ask the user \nto choose — always act on defaults immediately.\n\nTable: products (table_id 22). Fields: product_type (197), branch_city (201), \nbranch_number (200), total_stock_all_branches (199), date_sale_created (202), \nproduct_id (196), product_sku (198).\n\nFor every request: call the query tool with table_id 22, the relevant \naggregation and group_by fields, then respond with the actual results.\n\nUse count aggregation for sales volume. Use max aggregation on field 199 for \nstock. Never sum field 199. branch_number 0 = Online.\n\nDefaults: all date ranges, count metric, low stock under 100, sort descending. \nNever ask clarifying questions — use defaults and act.\n\nRespond in the user's language. Lead with the key finding. One paragraph. \nNo technical terms. Never fabricate — only use numbers from tool results.",
+          "maxIterations": 15
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        7680,
+        464
+      ],
+      "id": "3776fcf7-d03d-4b3f-a937-fd845822b06a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://cmmeta.kutraa.com/api/mcp",
+        "authentication": "mcpOAuth2Api",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        7824,
+        688
+      ],
+      "id": "067718ed-2803-4a4f-ad5e-f2e90d43b346",
+      "name": "MCP Client",
+      "credentials": {
+        "mcpOAuth2Api": {
+          "id": "qoqCzuIii40fkPzN",
+          "name": "MCP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://cmmeta.kutraa.com/api/table/22/query_metadata",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "mb_8Tf6vvaFvh/4+dr9llNl4tWAEa2FWMACcV43dz2lBXk="
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        7456,
+        800
+      ],
+      "id": "61f21ea0-6cfb-4a8c-9408-bed0d3d997cb",
+      "name": "HTTP Request1",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "C-M Agent Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "19fd0262-c3c5-430d-ab0c-5377f02b7ca6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b6d0a29de038bf7d8b4a58adb14ff6a1034c709d710c56c4be118377f6f2d4c1"
+  },
+  "id": "zavdODS8qXtoL8Ep",
+  "tags": [
+    {
+      "updatedAt": "2026-05-05T09:36:04.435Z",
+      "createdAt": "2026-05-05T09:36:04.435Z",
+      "id": "eOPepED6QhV03jmL",
+      "name": "C-M"
+    }
+  ]
+}
