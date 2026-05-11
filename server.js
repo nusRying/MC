@@ -107,7 +107,7 @@ app.get('*', (req, res) => {
 
 export default app;
 
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' || import.meta.url === `file://${fileURLToPath(import.meta.url)}`) {
   app.listen(port, () => {
     console.log(`🚀 Mission Control running at http://localhost:${port}`);
   });

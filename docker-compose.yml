@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  cm-portal:
+    build: .
+    container_name: cm-portal
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - METABASE_INSTANCE_URL=${METABASE_INSTANCE_URL}
+      - METABASE_SECRET_KEY=${METABASE_SECRET_KEY}
+      - METABASE_DASHBOARD_ID=${METABASE_DASHBOARD_ID}
+      - N8N_WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
+      - LOGTO_API_RESOURCE=${LOGTO_API_RESOURCE}
+      - LOGTO_APP_ID=${LOGTO_APP_ID}
+      - ACTIVITY_LOG_URL=${ACTIVITY_LOG_URL}
+      - ACTIVITY_LOG_APIKEY=${ACTIVITY_LOG_APIKEY}
